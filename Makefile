@@ -19,38 +19,29 @@ PKGNR = 200
 
 APKS = $(shell find apks/ -name '*.apk' | head -n $(PKGNR)) 
 
-all: depkg geneb
+# all: depkg geneb
 
-depkg:
+all: build-simtxt build-classifier
 	@for file in $(APKS); do {\
 		if [ -d apkout/$$(basename $$file .apk) ]; then continue; fi; \
 		if apktool d -s $$file -o apkout/$$(basename $$file .apk); then \
 			echo succeed\ depkg\ $$file; \
 		else \
-			rm -r apkout/$$(basename $$file .apk); \
+			{ rm -r apkout/$$(basename $$file .apk); continue; } \
 		fi; \
-	} done;
-
-geneb: build-simtxt build-classifier
-	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
-		if [ -f $$dir/hashlist.txt ]; then continue; fi; \
-		echo processing $$dir images; \
-		for file in $$(find $$dir/res -name '*.png') $$(find $$dir/assets -name '*.png'); do \
-			python dhash.py $$file >> $$dir/hashlist.txt; \
+		if [ -f apkout/$$(basename $$file .apk)/hashlist.txt ]; then continue; fi; \
+		echo processing apkout/$$(basename $$file .apk) images; \
+		for fn in $$(find apkout/$$(basename $$file .apk)/res -name '*.png') $$(find apkout/$$(basename $$file .apk)/assets -name '*.png'); do \
+			python dhash.py $$fn >> apkout/$$(basename $$file .apk)/hashlist.txt; \
 		done; \
-	} done;
-	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
-		build/classifier <$$dir/hashlist.txt >birthmark/$$(basename $$dir)_birthmark_image.txt; \
-	} done;
-	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
-		if [ -f $$dir/txtall.txt ]; then continue; fi; \
-		echo processing $$dir texts; \
-		for file in $$(find $$dir/res -name '*.xml') $$(find $$dir/assets -name '*.xml'); do \
-			cat $$file >> $$dir/txtall.txt; \
+		build/classifier <apkout/$$(basename $$file .apk)/hashlist.txt >birthmark/$$(basename apkout/$$(basename $$file .apk))_birthmark_image.txt; \
+		if [ -f apkout/$$(basename $$file .apk)/txtall.txt ]; then continue; fi; \
+		echo processing apkout/$$(basename $$file .apk) texts; \
+		for fn in $$(find apkout/$$(basename $$file .apk)/res -name '*.xml') $$(find apkout/$$(basename $$file .apk)/assets -name '*.xml'); do \
+			cat $$fn >> apkout/$$(basename $$file .apk)/txtall.txt; \
 		done; \
-	} done;
-	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
-		simtxt/build/simtxt -is -D $$dir <$$dir/txtall.txt; \
+		simtxt/build/simtxt -is -D apkout/$$(basename $$file .apk) <apkout/$$(basename $$file .apk)/txtall.txt; \
+		rm -r apkout/$$(basename $$file .apk); \
 	} done;
 
 clean:
