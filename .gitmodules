@@ -1,0 +1,3 @@
+[submodule "simtxt"]
+	path = simtxt
+	url = git@github.com:Bardisk/simtxt
