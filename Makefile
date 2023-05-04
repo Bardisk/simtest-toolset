@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 build-simtxt:
+	@make -C simtxt clean
 	@make -C simtxt
 
 $(shell mkdir -p build)
@@ -14,34 +15,43 @@ build-simcalc:
 $(shell mkdir -p apkout)
 $(shell mkdir -p birthmark)
 
-PKGNR = 20
+PKGNR = 200
 
-APKS = $(shell find apks/ -name '*.apk' | head -n $(PKGNR))
-APKFS = $(addprefix apkout/,$(shell ls apkout/)) 
+APKS = $(shell find apks/ -name '*.apk' | head -n $(PKGNR)) 
+
+all: depkg geneb
 
 depkg:
-	@for file in $(APKS); do \
+	@for file in $(APKS); do {\
+		if [ -d apkout/$$(basename $$file .apk) ]; then continue; fi; \
 		if apktool d -s $$file -o apkout/$$(basename $$file .apk); then \
 			echo succeed\ depkg\ $$file; \
 		else \
 			rm -r apkout/$$(basename $$file .apk); \
 		fi; \
-	done;
+	} done;
 
-geneb:
-	@for dir in $(APKFS); do { \
+geneb: build-simtxt build-classifier
+	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
 		if [ -f $$dir/hashlist.txt ]; then continue; fi; \
-		echo processing $$dir; \
-		for file in $$(find $$dir -name '*.png') $$(find $$dir -name '*.jpg'); do \
+		echo processing $$dir images; \
+		for file in $$(find $$dir/res -name '*.png') $$(find $$dir/assets -name '*.png'); do \
 			python dhash.py $$file >> $$dir/hashlist.txt; \
 		done; \
-	} \
-	done;
-	@for dir in $(APKFS); do { \
+	} done;
+	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
 		build/classifier <$$dir/hashlist.txt >birthmark/$$(basename $$dir)_birthmark_image.txt; \
-	} \
-	done;
-
+	} done;
+	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
+		if [ -f $$dir/txtall.txt ]; then continue; fi; \
+		echo processing $$dir texts; \
+		for file in $$(find $$dir/res -name '*.xml') $$(find $$dir/assets -name '*.xml'); do \
+			cat $$file >> $$dir/txtall.txt; \
+		done; \
+	} done;
+	@for dir in $(addprefix apkout/,$(shell ls apkout/ | head -n $(PKGNR))); do { \
+		simtxt/build/simtxt -is -D $$dir <$$dir/txtall.txt; \
+	} done;
 
 clean:
 	-@rm -r apkout
@@ -49,4 +59,4 @@ clean:
 test:
 	@for file in $(APKFS); do echo $$file; done;
 
-.PHONY: test clean geneb depkg build-simtxt build-classifier
+.PHONY: test clean geneb depkg build-simtxt build-classifier build-simcalc all
