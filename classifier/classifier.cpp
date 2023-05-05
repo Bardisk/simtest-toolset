@@ -11,8 +11,10 @@ int main() {
   assert(class_file);
   ULL x;
   fscanf(class_file, "%*d");
-  while(~fscanf(class_file, "%*x%llx%*d", &x))
+  while(~fscanf(class_file, "%*x%llx%*d", &x)) {
+    assert(center_cnt < MAX_CLSTR);
     centers[center_cnt++] = x;
+  }
   while(~scanf("%llx", &x)) {
     hashtype now = x;
     int min_center_num = 0;
