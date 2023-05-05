@@ -29,8 +29,12 @@ else
   for fn in $(find ${APKDIR}/res -name '*.png') $(find ${APKDIR}/assets -name '*.png'); do
     python dhash.py $fn >> ${APKDIR}/hashlist.txt
   done
-  build/classifier <${APKDIR}/hashlist.txt >${APKDIR}/classifiedhashlist.txt;
-  cat ${APKDIR}/classifiedhashlist.txt >birthmark/${APKNAME}_birthmark_image.txt
+  if build/classifier <${APKDIR}/hashlist.txt >${APKDIR}/classifiedhashlist.txt; then
+    echo img birthmark generation success!
+    cat ${APKDIR}/classifiedhashlist.txt >birthmark/${APKNAME}_birthmark_image.txt
+  else
+    echo img birthmark generation failure!
+  fi
 fi
 if [ -f birthmark/${APKNAME}_birthmark_text.bin ]; then
   echo birthmark \(txt\) already exists, skipping...
@@ -42,7 +46,11 @@ else
   for fn in $(find ${APKDIR}/res -name '*.xml') $(find ${APKDIR}/assets -name '*.xml'); do
     cat $fn >> ${APKDIR}/txtall.txt
   done
-  simtxt/build/simtxt -is -D ${APKDIR} <${APKDIR}/txtall.txt
-  cp ${APKDIR}/g1.bm birthmark/${APKNAME}_birthmark_text.bin
+  if simtxt/build/simtxt -is -D ${APKDIR} <${APKDIR}/txtall.txt; then
+    echo txt birthmark generation success!
+    cp ${APKDIR}/g1.bm birthmark/${APKNAME}_birthmark_text.bin
+  else
+    echo txt birthmark generation failure!
+  fi
 fi
 rm -r ${APKDIR}
