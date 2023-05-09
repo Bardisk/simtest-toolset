@@ -10,7 +10,8 @@ build-classifier:
 	@cp classifier/piclass.txt build/
 
 build-simcalc:
-	@g++ -o build/simcalc -O2 -Wall -Wextra -std=c++11 simcalc/simcalc.cpp
+	@g++ -o build/simcalc -O2 -DMULTI -Wall -Wextra -std=c++11 simcalc/simcalc.cpp
+	@g++ -o build/simcalc_txt -DMULTI -DEXTENDED_HASH -DBIN_BIRTHMARK -O2 -Wall -Wextra -std=c++11 simcalc/simcalc.cpp
 
 $(shell mkdir -p apkout)
 $(shell mkdir -p birthmark)

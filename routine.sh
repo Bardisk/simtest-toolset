@@ -53,4 +53,4 @@ else
     echo txt birthmark generation failure!
   fi
 fi
-rm -r ${APKDIR}
+# rm -r ${APKDIR}

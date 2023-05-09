@@ -11,7 +11,13 @@ char *fn1, *fn2;
   #define PRH "%hx"
 #endif
 
+#ifndef MULTI
 std::unordered_set <hash_type> A, B, U;
+#else
+std::unordered_multiset <hash_type> A, B, U;
+#endif
+
+bool is_text = false;
 
 int main(int argc, char *argv[]) {
   int opt;
@@ -29,19 +35,49 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
+
+#ifdef BIN_BIRTHMARK
+  FILE *fa = fopen(fn1, "rb");
+  FILE *fb = fopen(fn2, "rb");
+#else
   FILE *fa = fopen(fn1, "r");
   FILE *fb = fopen(fn2, "r");
+#endif
+  
   assert(fa);
   assert(fb);
 
   hash_type hash;
+#ifdef BIN_BIRTHMARK
+  while (fread(&hash, sizeof(hash_type), 1, fa) == 1) {
+    A.insert(hash);
+    U.insert(hash);
+  }
+  while (fread(&hash, sizeof(hash_type), 1, fb) == 1) {
+    B.insert(hash);
+#ifdef MULTI
+    if (U.count(hash) < B.count(hash))
+      U.insert(hash);
+#else
+    U.insert(hash);
+#endif
+  }
+#else
   while (~fscanf(fa, PRH, &hash)) {
     A.insert(hash);
     U.insert(hash);
   }
   while (~fscanf(fb, PRH, &hash)) {
     B.insert(hash);
+#ifdef MULTI
+    if (U.count(hash) < B.count(hash))
+      U.insert(hash);
+#else
     U.insert(hash);
+#endif
   }
-  printf("%.4lf\n", (A.size() + B.size() - U.size() + 0.0) / U.size());
+#endif
+  if (U.size() < 100) printf("2.0\n");
+  else printf("%.4lf\n", (A.size() + B.size() - U.size() + 0.0) / U.size());
+  // printf("%d %d %d\n", A.size(), B.size(), U.size());
 }

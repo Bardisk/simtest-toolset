@@ -3,3 +3,4 @@ build
 apks
 apkout
 birthmark
+*.log
